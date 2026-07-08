@@ -28,3 +28,28 @@
 
 - Page scaffolding, Tailwind design tokens, base layout, reusable UI primitives
 - Static landing page shell (no logic yet)
+
+
+
+## Day 2 — Thu, Jul 9, 2026
+
+### Built
+- Explored App Router file conventions (`layout.tsx`, `page.tsx`, `globals.css`) and Server Components
+- Set up Tailwind v4 design tokens via `@theme` in `globals.css`
+- Loaded custom fonts (Space Grotesk, Inter, IBM Plex Mono) via `next/font/google`
+- Built reusable `Button` and `Card` components with TypeScript prop typing
+- Built initial landing page shell using those primitives
+
+### Decisions made
+- First pass on the landing page (generic blue/white SaaS look) was rejected as too templated — redesigned around a "diagnostic/lighthouse" visual identity: dark control-room palette, warm amber "beacon" accent, functional green reserved for real score data later
+- Adopted a 3-font system instead of one font doing every job: Space Grotesk (display/headlines), Inter (body), IBM Plex Mono (data/labels — reinforces the "instrument panel" feel)
+- Added one deliberate signature animation (an amber "scanline" sweep across the input panel) rather than scattering motion throughout — kept restrained on purpose
+- Respected `prefers-reduced-motion` on the scanline animation from the start, not as an afterthought
+
+### Bugs hit & fixed
+- Turbopack picked the wrong workspace root due to a stray `package-lock.json` at the Windows user-folder level. Removed the orphaned lockfile and explicitly pinned `turbopack.root` in `next.config.ts` so this can't recur.
+
+### What's next (Day 3)
+- Build the actual URL input form
+- Zod schema for server-side validation
+- First Next.js Route Handler (API endpoint)
