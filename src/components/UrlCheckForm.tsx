@@ -3,8 +3,9 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { urlCheckSchema } from '@/lib/validation';
 import { Button } from '@/components/ui/Button';
-import { ScoreItem } from '@/components/ui/ScoreItem';
+// import { ScoreItem } from '@/components/ui/ScoreItem';
 import type { AuditScores } from '@/lib/scoring';
+import { ScoreReveal } from './ui/ScoreReveal';
 
 const LOADING_MESSAGES = [
   'Fetching your site…',
@@ -106,14 +107,7 @@ export function UrlCheckForm() {
         </div>
       )}
 
-      {status === 'success' && scores && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <ScoreItem label="Performance" score={scores.performance} />
-          <ScoreItem label="SEO" score={scores.seo} />
-          <ScoreItem label="Accessibility" score={scores.accessibility} />
-          <ScoreItem label="Best Practices" score={scores.bestPractices} />
-        </div>
-      )}
+      {status === 'success' && scores && <ScoreReveal scores={scores} />}
     </form>
   );
 }
