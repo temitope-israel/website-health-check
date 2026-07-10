@@ -53,3 +53,26 @@
 - Build the actual URL input form
 - Zod schema for server-side validation
 - First Next.js Route Handler (API endpoint)
+
+
+## Day 3 — Fri, Jul 10, 2026
+
+### Built
+- `UrlCheckForm` Client Component — controlled input, client-side Zod validation, `fetch` POST to our own API
+- Shared Zod schema (`src/lib/validation.ts`) used identically on both client and server — single source of truth for what a "valid URL" means
+- First Route Handler: `src/app/api/audit/route.ts` (POST) — validates the request body server-side, currently returns a placeholder echo response
+- Wired the form into the Day 2 landing page, replacing the static placeholder panel
+
+### Concepts learned
+- Client Components (`'use client'`) vs. Server Components — interactivity requires opting in, and only where actually needed
+- Why client-side validation is a UX nicety, not a security boundary — the server-side check is the one that actually matters
+- Zod: shared schemas, `safeParse`, `z.infer` for auto-generating TypeScript types from validation rules
+- Route Handlers: filesystem-based API routes, HTTP method → exported function name convention (`POST`, `GET`, etc.)
+
+### Bugs hit & fixed
+- Form submission failed client-side ("something went wrong") despite the server logging a successful receipt — traced to a copy/paste error in `UrlCheckForm.tsx`, not a real logic bug. Confirmed using the browser's Network tab to compare what the client actually sent/received against the server logs.
+
+### What's next (Day 4)
+- Integrate Google PageSpeed Insights API (or Lighthouse) to run a real audit
+- Build scoring/normalization logic
+- Vitest unit tests for that logic

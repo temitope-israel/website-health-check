@@ -30,16 +30,6 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-8 flex items-center gap-6">
-        <Button variant="primary">Run Free Diagnostic</Button>
-        <a
-          href="#"
-          className="text-sm text-mist underline-offset-4 hover:text-paper hover:underline"
-        >
-          Learn more →
-        </a>
-      </div>
-
       <div className="mt-20 border-t border-mist/10 pt-6 font-mono text-xs uppercase tracking-widest text-mist">
         Performance · SEO · Accessibility · Best Practices
       </div>

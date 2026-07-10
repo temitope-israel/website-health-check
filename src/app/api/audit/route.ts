@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { urlCheckSchema } from '@/lib/validation';
+import { fetchPageSpeedReport } from '@/lib/pagespeed';
+import { normalizeScores } from '@/lib/scoring';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -14,8 +16,18 @@ export async function POST(request: NextRequest) {
 
   const { url } = result.data;
 
-  // Placeholder for now — Day 4 replaces this with a real audit.
-  console.log('Received valid URL to audit:', url);
-
-  return NextResponse.json({ received: url });
+  try {
+    const rawReport = await fetchPageSpeedReport(url);
+    const scores = normalizeScores(rawReport);
+    return NextResponse.json({ url, scores });
+  } catch (err) {
+    console.error('PageSpeed audit failed:', err);
+    return NextResponse.json(
+      {
+        error:
+          'We could not audit that URL right now. Please try again shortly.',
+      },
+      { status: 502 }
+    );
+  }
 }
