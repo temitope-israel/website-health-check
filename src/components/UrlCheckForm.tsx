@@ -26,9 +26,6 @@ export function UrlCheckForm() {
   useEffect(() => {
     if (status !== 'loading') return;
 
-    setElapsedSeconds(0);
-    setLoadingMessage(LOADING_MESSAGES[0]);
-
     let messageIndex = 0;
     const messageInterval = setInterval(() => {
       messageIndex = Math.min(messageIndex + 1, LOADING_MESSAGES.length - 1);
@@ -57,6 +54,8 @@ export function UrlCheckForm() {
     }
 
     setStatus('loading');
+    setElapsedSeconds(0);
+    setLoadingMessage(LOADING_MESSAGES[0]);
 
     try {
       const res = await fetch('/api/audit', {

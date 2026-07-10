@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeScores } from './scoring';
+import { getRating } from './scoring';
 
 describe('normalizeScores', () => {
   it('converts Lighthouse 0-1 scores into 0-100 scores', () => {
@@ -40,5 +41,22 @@ describe('normalizeScores', () => {
       accessibility: 0,
       bestPractices: 0,
     });
+  });
+});
+
+describe('getRating', () => {
+  it('rates 90 and above as good', () => {
+    expect(getRating(90)).toBe('good');
+    expect(getRating(100)).toBe('good');
+  });
+
+  it('rates 50 to 89 as needs-improvement', () => {
+    expect(getRating(89)).toBe('needs-improvement');
+    expect(getRating(50)).toBe('needs-improvement');
+  });
+
+  it('rates below 50 as poor', () => {
+    expect(getRating(49)).toBe('poor');
+    expect(getRating(0)).toBe('poor');
   });
 });

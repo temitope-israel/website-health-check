@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button';
 import { UrlCheckForm } from '@/components/UrlCheckForm';
 
 export default function Home() {

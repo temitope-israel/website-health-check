@@ -72,7 +72,27 @@
 ### Bugs hit & fixed
 - Form submission failed client-side ("something went wrong") despite the server logging a successful receipt — traced to a copy/paste error in `UrlCheckForm.tsx`, not a real logic bug. Confirmed using the browser's Network tab to compare what the client actually sent/received against the server logs.
 
-### What's next (Day 4)
-- Integrate Google PageSpeed Insights API (or Lighthouse) to run a real audit
-- Build scoring/normalization logic
-- Vitest unit tests for that logic
+## Day 4 — Sat, Jul 11, 2026
+
+### Built
+- Google PageSpeed Insights API integration (`src/lib/pagespeed.ts`) — real Lighthouse audits, not mocked
+- Scoring/normalization logic (`src/lib/scoring.ts`) — converts Google's raw 0–1 category scores into clean 0–100 `AuditScores`
+- Rating logic (`getRating`) using Lighthouse's official thresholds: 90+ Good, 50–89 Needs Improvement, <50 Poor
+- `ScoreItem` component — displays each score with a color-coded plain-language rating, not just a bare number
+- Loading UX: rotating status messages + elapsed-second counter while a scan is in progress (honest, not a fake progress bar)
+- First Vitest unit tests — 8 test cases covering `normalizeScores` (including missing-data edge cases) and `getRating` (including exact boundary values)
+- Added test run to CI (`npm run test` now required to pass, alongside lint/format)
+- `.env.local` / `.env.example` pattern established for secrets (PageSpeed API key today; Resend, database URL, etc. will follow the same pattern)
+
+### Decisions made
+- Chose to unit-test the pure scoring/rating functions, not the PageSpeed network call itself — kept tests fast, deterministic, and free of API quota usage; real network behavior gets covered by Day 9's Playwright e2e test instead
+- Used Lighthouse's own official score thresholds for ratings rather than inventing our own scale — keeps results recognizable/credible to anyone familiar with web performance tooling
+- Rejected a fake percentage-based progress bar (PageSpeed's API gives no real incremental progress) in favor of honest elapsed-time + rotating status messages
+- Noted a future idea (not in scope for the 10-day build): comparing a site's scores against the real population of sites we've scanned, once enough leads have accumulated
+
+### Bugs hit & fixed
+- Frontend never read the real API response on success — was still showing a hardcoded Day 3 placeholder message even though real scores were coming back correctly. Root cause: `res.json()` was only ever called in the error branch. Fixed by always parsing the response body and storing real data in state.
+
+### What's next (Day 5)
+- Framer Motion score-reveal animation (replacing today's plain score grid)
+- Weekly review + build-in-public recap post
