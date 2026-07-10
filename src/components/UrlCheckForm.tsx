@@ -23,6 +23,11 @@ export function UrlCheckForm() {
   const [scores, setScores] = useState<AuditScores | null>(null);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [email, setEmail] = useState('');
+  const [reportStatus, setReportStatus] = useState<
+    'idle' | 'loading' | 'success'
+  >('idle');
+  const [reportError, setReportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status !== 'loading') return;
@@ -47,6 +52,7 @@ export function UrlCheckForm() {
     e.preventDefault();
     setError(null);
     setScores(null);
+    setReportError(null);
 
     const result = urlCheckSchema.safeParse({ url });
     if (!result.success) {
@@ -55,6 +61,7 @@ export function UrlCheckForm() {
     }
 
     setStatus('loading');
+
     setElapsedSeconds(0);
     setLoadingMessage(LOADING_MESSAGES[0]);
 
@@ -79,9 +86,39 @@ export function UrlCheckForm() {
     }
   }
 
+  async function handleSendReport(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setReportError(null);
+
+    if (!scores) return;
+
+    setReportStatus('loading');
+
+    try {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, email, scores }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error ?? 'Something went wrong');
+      }
+
+      setReportStatus('success');
+    } catch (err) {
+      setReportError(
+        err instanceof Error ? err.message : 'Something went wrong'
+      );
+      setReportStatus('idle');
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row">
+    <div className="space-y-3">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           value={url}
@@ -93,7 +130,7 @@ export function UrlCheckForm() {
         <Button type="submit" disabled={status === 'loading'}>
           {status === 'loading' ? 'Scanning…' : 'Run Free Diagnostic'}
         </Button>
-      </div>
+      </form>
 
       {error && <p className="font-mono text-sm text-red-400">{error}</p>}
 
@@ -107,7 +144,45 @@ export function UrlCheckForm() {
         </div>
       )}
 
-      {status === 'success' && scores && <ScoreReveal scores={scores} />}
-    </form>
+      {status === 'success' && scores && (
+        <>
+          <ScoreReveal scores={scores} />
+
+          {reportStatus !== 'success' ? (
+            <form
+              onSubmit={handleSendReport}
+              className="mt-6 flex flex-col gap-2 sm:flex-row"
+            >
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="flex-1 rounded-md border border-mist/20 bg-void px-4 py-3 font-mono text-sm text-paper placeholder:text-mist/50 focus:outline-none focus:ring-2 focus:ring-beacon"
+                disabled={reportStatus === 'loading'}
+              />
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={reportStatus === 'loading'}
+              >
+                {reportStatus === 'loading'
+                  ? 'Sending…'
+                  : 'Email Me the Report'}
+              </Button>
+            </form>
+          ) : (
+            <p className="mt-6 font-mono text-sm text-ok">
+              Report sent — check your inbox.
+            </p>
+          )}
+
+          {reportError && (
+            <p className="mt-2 font-mono text-sm text-red-400">{reportError}</p>
+          )}
+        </>
+      )}
+    </div>
   );
 }
