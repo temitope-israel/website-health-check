@@ -96,3 +96,50 @@
 ### What's next (Day 5)
 - Framer Motion score-reveal animation (replacing today's plain score grid)
 - Weekly review + build-in-public recap post
+
+## Day 5 — Sun, Jul 12, 2026
+
+### Built
+- Installed Framer Motion
+- `AnimatedNumber` component — count-up animation using `useMotionValue` + `useSpring`, driven via a ref rather than `setState` to avoid excessive re-renders on rapidly-changing values
+- `ScoreReveal` + `ScoreRing` components — replaced the plain Day 4 score grid with animated SVG progress rings (stroke-dashoffset technique) that cascade in one after another using Framer Motion `variants` + `staggerChildren`
+- Swapped `ScoreReveal` into `UrlCheckForm`, replacing the flat number grid from Day 4
+- Kept `ScoreItem.tsx` in the codebase unused for now — likely reusable for a simpler list view in the Day 7 admin dashboard
+
+### Concepts learned
+- `motion` components, `initial`/`animate`, and named `variants` for declarative animation states
+- `staggerChildren` for cascading/sequenced reveals without manually timing each element
+- `useMotionValue` + `useSpring` for performant, physics-based animated values that bypass React's normal re-render cycle
+- `useInView` to trigger an animation only once an element scrolls into view
+- SVG progress-ring technique: `circumference`, `strokeDasharray`, `strokeDashoffset`
+
+### Decisions made
+- Skipped a separate formal "Week 1 recap" post — keeping to one focused post per build day instead, per founder preference
+- Public post-day numbering stayed offset by one from real build-day numbering, following the Day 3+4 merge decision made earlier — `PROGRESS.md` continues tracking real build days regardless of the public post label
+
+### Bugs hit & fixed
+- CI lint failure: `react-hooks/set-state-in-effect` — the loading-state `useEffect` (built Day 4) was calling `setElapsedSeconds`/`setLoadingMessage` synchronously in the effect body instead of only inside later callbacks. Fixed by moving the reset calls into `handleSubmit` (the actual event handler triggering the loading state) and leaving the effect responsible only for setting up/cleaning up the interval subscriptions. Caught and resolved at the start of this session, before today's Framer Motion work began.
+
+### What's next (Day 6)
+- Resend email integration
+- PDF report generation
+- Email capture step in the UI
+
+## Day 6 — Mon, Jul 13, 2026
+
+### Built
+- PDF report generation (`src/lib/pdf.tsx`) using @react-pdf/renderer — pure JS PDF drawing, no headless browser, Vercel-Hobby-tier friendly
+- Resend integration (`src/lib/email.ts`) — transactional email with PDF attachment
+- New Route Handler `/api/report` — validates email + scores, generates PDF, sends email
+- Email capture step added to the form UI, appearing after a successful scan
+
+### Decisions made
+- Chose @react-pdf/renderer over Puppeteer for PDF generation — Puppeteer's headless-Chromium requirement doesn't fit reliably in Vercel's free serverless function limits; @react-pdf/renderer has zero browser dependency
+- Currently sending from Resend's sandbox address (onboarding@resend.dev) to only my own verified email — real domain verification deferred to Day 10, right before public launch, since it's not needed for continued development
+- Lead capture is still a console.log placeholder — real persistence lands Day 7 with Neon + Prisma
+
+### What's next (Day 7)
+- Set up Neon Postgres + Prisma
+- Model User and Lead tables
+- Auth.js Credentials provider for admin login (applying Day 1's JWT/bcrypt lesson)
+- Replace today's console.log with a real database write
