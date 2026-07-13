@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { reportRequestSchema } from '@/lib/validation';
 import { generateReportPdf } from '@/lib/pdf';
 import { sendReporEmail } from '@/lib/email';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -21,7 +22,16 @@ export async function POST(request: NextRequest) {
     await sendReporEmail({ to: email, url, pdfBuffer });
 
     // Placeholder - Day 7 replaces this with a real database write.
-    console.log('New lead captured:', { email, url, scores });
+    await prisma.lead.create({
+      data: {
+        email,
+        url,
+        performance: scores.performance,
+        seo: scores.seo,
+        accessibility: scores.accessibility,
+        bestPractices: scores.bestPractices,
+      },
+    });
 
     return NextResponse.json({ sent: true });
   } catch (err) {
