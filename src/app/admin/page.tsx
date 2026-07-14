@@ -1,9 +1,13 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { SignOutButton } from '@/components/SignOutButton';
+import * as Sentry from '@sentry/nextjs';
 
 export default async function AdminDashboard() {
   const session = await auth();
+  if (session?.user?.email) {
+    Sentry.setUser({ email: session.user.email });
+  }
   const leads = await prisma.lead.findMany({ orderBy: { createdAt: 'desc' } });
 
   return (

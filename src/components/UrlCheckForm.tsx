@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 // import { ScoreItem } from '@/components/ui/ScoreItem';
 import type { AuditScores } from '@/lib/scoring';
 import { ScoreReveal } from './ui/ScoreReveal';
+import posthog from 'posthog-js';
 
 const LOADING_MESSAGES = [
   'Fetching your site…',
@@ -80,6 +81,7 @@ export function UrlCheckForm() {
 
       setScores(data.scores);
       setStatus('success');
+      posthog.capture('audit_run', { url });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setStatus('idle');
@@ -108,6 +110,7 @@ export function UrlCheckForm() {
       }
 
       setReportStatus('success');
+      posthog.capture('report_requested', { url });
     } catch (err) {
       setReportError(
         err instanceof Error ? err.message : 'Something went wrong'

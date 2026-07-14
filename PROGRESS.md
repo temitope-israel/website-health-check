@@ -143,3 +143,26 @@
 - Model User and Lead tables
 - Auth.js Credentials provider for admin login (applying Day 1's JWT/bcrypt lesson)
 - Replace today's console.log with a real database write
+
+
+## Day 7 — Tue, Jul 14, 2026
+
+### Built
+- Neon Postgres database + Prisma ORM — `User` and `Lead` models, first migration applied
+- Prisma Client singleton (`src/lib/prisma.ts`) to avoid connection exhaustion during dev hot-reload
+- Replaced the Day 6 console.log placeholder with a real `prisma.lead.create()` write
+- Auth.js v5 Credentials provider (`src/auth.ts`) — real bcrypt verification against a real database, JWT session strategy
+- Seed script (`prisma/seed.ts`) to bootstrap the one admin account, using bcrypt hash + upsert for idempotency
+- `/admin/login` page and `/admin` dashboard listing all captured leads
+- Route protection via `src/proxy.ts` (Next.js 16's renamed `middleware.ts`) + an `authorized` callback in the central Auth.js config
+
+### Decisions made
+- Used a plain `.env` file (not `.env.local`) for `DATABASE_URL`, `AUTH_SECRET`, etc., since Prisma's CLI only reads `.env` by default — explicitly re-verified `.env` is git-ignored given the higher stakes of a leaked DB connection string
+- Chose `bcryptjs` over native `bcrypt` to avoid native-binary compilation friction on Vercel's serverless deploys
+- Route protection logic lives in Auth.js's `authorized` callback (not hand-written redirect logic in proxy.ts) — matches the current official v5 pattern and keeps all auth logic centralized in one file
+- Confirmed and adopted Next.js 16's `middleware.ts` → `proxy.ts` rename, since that's the version actually in use
+
+### What's next (Day 8)
+- Rate limiting on the public audit/report endpoints
+- Sentry error tracking
+- PostHog product analytics
