@@ -8,7 +8,7 @@ export const auditRatelimit = new Ratelimit({
   prefix: 'whc:audit',
 });
 
-export const reportRatelimt = new Ratelimit({
+export const reportRatelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(3, '60 s'),
   analytics: true,

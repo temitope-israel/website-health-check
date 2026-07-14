@@ -8,7 +8,7 @@ interface SendReportEmailParams {
   pdfBuffer: Buffer;
 }
 
-export async function sendReporEmail({
+export async function sendReportEmail({
   to,
   url,
   pdfBuffer,

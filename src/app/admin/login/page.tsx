@@ -42,6 +42,7 @@ export default function AdminLoginPage() {
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
         <input
           type="email"
+          name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
@@ -49,6 +50,7 @@ export default function AdminLoginPage() {
         />
         <input
           type="password"
+          name="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"

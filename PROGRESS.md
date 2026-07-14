@@ -166,3 +166,22 @@
 - Rate limiting on the public audit/report endpoints
 - Sentry error tracking
 - PostHog product analytics
+
+
+## Day 8 — Wed, Jul 15, 2026
+
+### Built
+- Rate limiting on /api/audit and /api/report via Upstash Redis + @upstash/ratelimit (sliding window algorithm), with a stricter limit on /api/report since it burns the scarcer Resend quota
+- Sentry error tracking via the official install wizard — covers browser, server, and edge runtimes; verified with a real test error
+- Tagged the logged-in admin's email as Sentry user context for better error correlation
+- PostHog product analytics — automatic pageview tracking plus two custom funnel events: `audit_run` and `report_requested`
+
+### Decisions made
+- Chose Upstash over a naive in-memory counter for rate limiting, since Vercel's serverless functions are stateless/ephemeral and need a shared external store any instance can check against
+- Used two separate rate limiters with different limits, matching each endpoint's actual resource cost rather than one blanket limit
+- Deferred setting SENTRY_AUTH_TOKEN on Vercel until Day 9's actual deployment, since it's only needed at build/deploy time
+
+### What's next (Day 9)
+- Playwright e2e test covering the full user flow
+- Deploy to Vercel
+- GitHub Actions auto-deploy on merge to main

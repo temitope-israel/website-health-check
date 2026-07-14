@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportRequestSchema } from '@/lib/validation';
 import { generateReportPdf } from '@/lib/pdf';
-import { sendReporEmail } from '@/lib/email';
+import { sendReportEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
+import { reportRatelimit } from '@/lib/ratelimit';
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+
+  if (process.env.NODE_ENV === 'production') {
+    const { success } = await reportRatelimit.limit(ip);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
+  }
+
   const body = await request.json();
   const result = reportRequestSchema.safeParse(body);
 
@@ -19,9 +33,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const pdfBuffer = await generateReportPdf(url, scores);
-    await sendReporEmail({ to: email, url, pdfBuffer });
+    await sendReportEmail({ to: email, url, pdfBuffer });
 
-    // Placeholder - Day 7 replaces this with a real database write.
     await prisma.lead.create({
       data: {
         email,
