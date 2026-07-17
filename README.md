@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Website Health Check
+
+A free, public website audit tool built by [Hotis Studio](#). Enter any URL, get an instant performance/SEO/accessibility/best-practices score with an animated breakdown, and receive a full PDF report by email. Built as a lead-generation tool and a public demonstration of full-stack engineering practice.
+
+**Live:** https://webbsite-health-check.vercel.app/
+
+## Features
+
+- Real Lighthouse-style audits via Google PageSpeed Insights
+- Animated, color-coded score reveal (Framer Motion)
+- Branded PDF report generation and email delivery (Resend)
+- Authenticated admin dashboard for captured leads (Auth.js, Credentials provider)
+- Rate limiting, error tracking, and product analytics wired in from day one
+
+## Tech Stack
+
+Next.js (App Router) · TypeScript · Tailwind CSS · Framer Motion · Prisma · PostgreSQL (Neon) · Auth.js · Zod · Vitest · Playwright · Sentry · PostHog · Upstash Redis · Resend · Vercel
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
+cp .env.example .env
+# fill in .env with your own keys — see below
+npx prisma generate
+npx prisma migrate dev
+npx tsx prisma/seed.ts
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+See `.env.example` for the full list. You'll need free accounts with: Neon, Google Cloud (PageSpeed Insights API), Resend, Upstash, Sentry, and PostHog.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command                           | Purpose                                         |
+| --------------------------------- | ----------------------------------------------- |
+| `npm run dev`                     | Local development server                        |
+| `npm run build`                   | Production build (runs `prisma generate` first) |
+| `npm run lint` / `npm run format` | Code quality checks                             |
+| `npm run test`                    | Vitest unit tests                               |
+| `npm run test:e2e`                | Playwright end-to-end tests                     |
 
-To learn more about Next.js, take a look at the following resources:
+## Known Limitations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Resend is currently in sandbox mode** — reports can only be emailed to the account owner's address until a custom domain is verified. Planned once Hotis Studio's domain is registered.
+- Playwright e2e tests are run locally/deliberately, not in CI, since they consume real third-party API quota per run.
