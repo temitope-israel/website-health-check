@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { urlCheckSchema } from '@/lib/validation';
+import { urlCheckSchema, emailSchema } from '@/lib/validation';
 import { Button } from '@/components/ui/Button';
-// import { ScoreItem } from '@/components/ui/ScoreItem';
-import type { AuditScores } from '@/lib/scoring';
 import { ScoreReveal } from './ui/ScoreReveal';
-import posthog from 'posthog-js';
+import type { AuditScores } from '@/lib/scoring';
 
 const LOADING_MESSAGES = [
   'Fetching your site…',
@@ -22,12 +20,17 @@ export function UrlCheckForm() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [scores, setScores] = useState<AuditScores | null>(null);
+  const [leadId, setLeadId] = useState<number | null>(null);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
   const [email, setEmail] = useState('');
   const [reportStatus, setReportStatus] = useState<
     'idle' | 'loading' | 'success'
   >('idle');
+  const [reportOutcome, setReportOutcome] = useState<
+    'sent' | 'downloaded' | null
+  >(null);
   const [reportError, setReportError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,6 +56,9 @@ export function UrlCheckForm() {
     e.preventDefault();
     setError(null);
     setScores(null);
+    setLeadId(null);
+    setReportStatus('idle');
+    setReportOutcome(null);
     setReportError(null);
 
     const result = urlCheckSchema.safeParse({ url });
@@ -62,7 +68,6 @@ export function UrlCheckForm() {
     }
 
     setStatus('loading');
-
     setElapsedSeconds(0);
     setLoadingMessage(LOADING_MESSAGES[0]);
 
@@ -80,19 +85,28 @@ export function UrlCheckForm() {
       }
 
       setScores(data.scores);
+      setLeadId(data.leadId);
       setStatus('success');
-      posthog.capture('audit_run', { url });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setStatus('idle');
     }
   }
 
-  async function handleSendReport(e: FormEvent<HTMLFormElement>) {
+  async function handleGetReport(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setReportError(null);
 
-    if (!scores) return;
+    const emailCheck = emailSchema.safeParse(email);
+    if (!emailCheck.success) {
+      setReportError(emailCheck.error.issues[0].message);
+      return;
+    }
+
+    if (!leadId) {
+      setReportError('We lost track of your scan. Please run it again.');
+      return;
+    }
 
     setReportStatus('loading');
 
@@ -100,17 +114,25 @@ export function UrlCheckForm() {
       const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, email, scores }),
+        body: JSON.stringify({ leadId, email: emailCheck.data }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
+        const data = await res.json();
         throw new Error(data.error ?? 'Something went wrong');
       }
 
+      const emailSent = res.headers.get('X-Email-Sent') === 'true';
+      const blob = await res.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'website-health-check-report.pdf';
+      link.click();
+      URL.revokeObjectURL(downloadUrl);
+
+      setReportOutcome(emailSent ? 'sent' : 'downloaded');
       setReportStatus('success');
-      posthog.capture('report_requested', { url });
     } catch (err) {
       setReportError(
         err instanceof Error ? err.message : 'Something went wrong'
@@ -125,7 +147,7 @@ export function UrlCheckForm() {
         <input
           type="text"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => setUrl(e.target.value.toLowerCase())}
           placeholder="https://yourwebsite.com"
           className="flex-1 rounded-md border border-mist/20 bg-void px-4 py-3 font-mono text-sm text-paper placeholder:text-mist/50 focus:outline-none focus:ring-2 focus:ring-beacon"
           disabled={status === 'loading'}
@@ -153,7 +175,7 @@ export function UrlCheckForm() {
 
           {reportStatus !== 'success' ? (
             <form
-              onSubmit={handleSendReport}
+              onSubmit={handleGetReport}
               className="mt-6 flex flex-col gap-2 sm:flex-row"
             >
               <input
@@ -161,23 +183,20 @@ export function UrlCheckForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                required
                 className="flex-1 rounded-md border border-mist/20 bg-void px-4 py-3 font-mono text-sm text-paper placeholder:text-mist/50 focus:outline-none focus:ring-2 focus:ring-beacon"
                 disabled={reportStatus === 'loading'}
               />
-              <Button
-                type="submit"
-                variant="secondary"
-                disabled={reportStatus === 'loading'}
-              >
+              <Button type="submit" disabled={reportStatus === 'loading'}>
                 {reportStatus === 'loading'
-                  ? 'Sending…'
-                  : 'Email Me the Report'}
+                  ? 'Preparing…'
+                  : 'Get My Full Report'}
               </Button>
             </form>
           ) : (
             <p className="mt-6 font-mono text-sm text-ok">
-              Report sent — check your inbox.
+              {reportOutcome === 'sent'
+                ? 'Sent to your inbox — and downloaded a copy for you too.'
+                : "Downloaded! (Email delivery isn't available yet, but you're all set.)"}
             </p>
           )}
 

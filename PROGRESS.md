@@ -185,3 +185,25 @@
 - Playwright e2e test covering the full user flow
 - Deploy to Vercel
 - GitHub Actions auto-deploy on merge to main
+
+
+
+## Day 9 — Thu, Jul 16, 2026
+
+### Built
+- Playwright e2e tests covering the full public flow (scan → scores → email → report sent) and the full admin flow (redirect when signed out, login, dashboard)
+- Gated rate limiting behind `NODE_ENV === 'production'` — local dev/testing shares one IP bucket and was tripping our own limiter
+- Deployed to Vercel — connected via GitHub integration, all secrets configured as environment variables
+- Enabled required status checks on `main` (lint/format/test) — the PR workflow is now actually enforced, not just habitual
+
+### Decisions made
+- Deliberately did not add Playwright to the automated GitHub Actions CI — e2e tests burn real PageSpeed/Resend quota per run; run locally and deliberately before deploying instead
+- No custom GitHub Actions deploy job needed — Vercel's own GitHub integration independently handles build + deploy on every push, running alongside (not instead of) the existing lint/format/test workflow
+
+### Still pending before Day 10 launch
+- Resend domain verification (currently sandbox-restricted to sending only to my own email — flagged back on Day 6)
+
+### What's next (Day 10)
+- Final polish pass
+- README + case study write-up
+- Public launch post
