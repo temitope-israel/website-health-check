@@ -6,27 +6,42 @@ import { auditRatelimit } from '@/lib/ratelimit';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const result = urlCheckSchema.safeParse(body);
-  const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+  try {
+    const body = await request.json();
+    const result = urlCheckSchema.safeParse(body);
 
-  if (process.env.NODE_ENV === 'production') {
-    const { success } = await auditRatelimit.limit(ip);
-    if (!success) {
+    // Get IP address without using request.ip
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const ip = realIp ?? forwardedFor?.split(',')[0].trim() ?? '127.0.0.1';
+
+    // 1. Rate Limiting Check
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const { success } = await auditRatelimit.limit(ip);
+        if (!success) {
+          return NextResponse.json(
+            { error: 'Too many requests. Please try again in a minute.' },
+            { status: 429 }
+          );
+        }
+      } catch (rateLimitErr) {
+        console.error('Rate limiting check failed:', rateLimitErr);
+        // Fallback: Continue execution if Upstash/Redis fails
+      }
+    }
+
+    // 2. Schema Validation Check
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again in a minute.' },
-        { status: 429 }
+        { error: result.error.issues[0].message },
+        { status: 400 }
       );
     }
-  }
 
-  if (!result.success) {
-    return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
-  }
+    const { url } = result.data;
 
-  const { url } = result.data;
-
-  try {
+    // 3. Fetch Audit & Save to Database
     const rawReport = await fetchPageSpeedReport(url);
     const scores = normalizeScores(rawReport);
 
@@ -41,6 +56,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url, scores, leadId: lead.id });
+
   } catch (err) {
     console.error('PageSpeed audit failed:', err);
 
